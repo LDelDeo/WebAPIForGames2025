@@ -1,4 +1,5 @@
 const express = require("express");
+const methodOverride = require('method-override');
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { Int32 } = require("bson");
@@ -78,8 +79,7 @@ app.post("/addcharecter", async (req,res)=>{
 
 //Update Route
 app.put("/updatecharecter/:id", (req,res)=>{
-    //Example of a promise statement for async function
-    Charecter.findByIdAndUpdate(req.perams.id, req.body, {
+    Charecter.findByIdAndUpdate(req.params.id, req.body, {
         new:true,
         runValidators:true
 
@@ -93,22 +93,24 @@ app.put("/updatecharecter/:id", (req,res)=>{
     });
 });
 
-//Delete ROute
-app.delete("/deletecharecter/firstname", async (req,res)=>{
-    try{
-        const charectername = req.query;
-        const charecter = await Charecter.find(charectername);
+//Delete Route
+app.delete("/deletecharecter/:id", async (req, res) => {
+    try {
+        const { id } = req.params; // Extract the character's id from the URL
+        const charecter = await Charecter.findById(id); // Use findById to find a character by its id
 
-        if (charecter.length === 0){
-            return res.status(404).json({error:"Failed to find the charecter."});
+        if (!charecter) {
+            return res.status(404).json({ error: "Failed to find the character." });
         }
-        const deletedcharecter = await Charecter.findOneAndDelete(charectername);
-        res.json({message:"Charecter deleted Successfully"});
-    }catch(err){
+
+        await Charecter.findByIdAndDelete(id); // Delete the character by its id
+        res.json({ message: "Character deleted successfully" });
+    } catch (err) {
         console.log(err);
-        return res.status(404).json({error:"Charecter not found."});
+        return res.status(500).json({ error: "An error occurred while deleting the character." });
     }
 });
+
 
 //Starts the server
 app.listen(port, ()=>{

@@ -1,29 +1,79 @@
 const userContainer = document.getElementById("users-container");
 
-const fetchUsers = async ()=>{
-    try{
-        //fetch data from server
-        const response = await fetch("/charecter");
-        if(!response){
+const fetchUsers = async () => {
+    try {
+        // Fetch data from server
+        const response = await fetch("/charecter"); // Correct spelling
+        if (!response.ok) {
             throw new Error("Failed to get charecters");
         }
 
-        //Parse json
+        // Parse JSON
         const users = await response.json();
 
-        //Format the data to html
+        // Clear existing content in the container
         userContainer.innerHTML = "";
 
         users.forEach((user) => {
             const userDiv = document.createElement("div");
+            const buttonContainer = document.createElement("div");
+            const updateButton = document.createElement("button");
+            const deleteButton = document.createElement("button");
+
+            // Styling for user entry
             userDiv.className = "user";
-            userDiv.innerHTML = `${user.firstname} ${user.lastname} Faction: ${user.faction}`;
+            userDiv.innerHTML = `${user.firstname} ${user.lastname} | Faction: ${user.faction}`;
+            userDiv.setAttribute("data-id", user._id); // Attach user ID to the div
+
+            // Create Update button
+            updateButton.textContent = "Update";
+            updateButton.addEventListener("click", function () {
+                // Use the associated user ID to redirect
+                window.location.href = `http://localhost:3000/updateentry.html?id=${user._id}`;
+            });
+
+            // Create Delete button
+            deleteButton.textContent = "Delete";
+            deleteButton.style.marginLeft = "10px"; // Optional styling for spacing
+            deleteButton.addEventListener("click", async function () {
+                // Confirm deletion
+                const confirmDelete = confirm(
+                    `Are you sure you want to delete ${user.firstname} ${user.lastname}?`
+                );
+                if (confirmDelete) {
+                    try {
+                        // Delete request to server using the user ID
+                        const deleteResponse = await fetch(`/deletecharecter/${user._id}`, {
+                            method: "DELETE",
+                        });
+                        if (!deleteResponse.ok) {
+                            const errorMessage = await deleteResponse.json();
+                            throw new Error("Failed to delete charecter");
+                        }
+                        // Remove user entry from UI after deletion
+                        userContainer.removeChild(userDiv);
+                        userContainer.removeChild(buttonContainer);
+                        alert("Charecter deleted successfully!");
+                    } catch (error) {
+                        console.error("Error deleting character:", error);
+                        alert("Failed to delete charecter.");
+                        alert(`Failed to delete character: ${error.message}`);
+                    }
+                }
+            });
+
+            // Add buttons to container
+            buttonContainer.appendChild(updateButton);
+            buttonContainer.appendChild(deleteButton);
+
+            // Append userDiv and button container to main container
             userContainer.appendChild(userDiv);
+            userContainer.appendChild(buttonContainer);
         });
-    }catch(error){
+    } catch (error) {
         console.error("Error: ", error);
-        userContainer.innerHTML = "<p style='color:red'>Failed to get charecters</p>"
+        userContainer.innerHTML = "<p style='color:red'>Failed to get characters</p>";
     }
-}
+};
 
 fetchUsers();

@@ -1,5 +1,5 @@
 {
-  "name": "webapi",
+  "name": "week2api",
   "version": "1.0.0",
   "description": "Test App for node class",
   "main": "app.js",
@@ -10,7 +10,10 @@
   "author": "Luke",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.20.3",
     "express": "^4.21.2",
+    "method-override": "^3.0.0",
+    "mongoose": "^8.9.5",
     "nodemon": "^3.1.9"
   }
 }

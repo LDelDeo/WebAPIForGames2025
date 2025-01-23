@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Charecter</title>
+    
+<body>
+    <h1>Update Charecter</h1>
+    <a href="index.html">Back to List</a>
+    <br>
+    <form id="updateForm" method="PUT">
+        <label for="firstname">First Name:</label>
+        <input type="text" id="firstname" name="firstname" required><br>
+        
+        <label for="lastname">Last Name:</label>
+        <input type="text" id="lastname" name="lastname" required><br>
+        
+        <label for="faction">Faction:</label>
+        <input type="text" id="faction" name="faction" required><br>
+        
+        <button type="submit">Update Charecter</button>
+    </form>
+    <script>
+        // JavaScript for handling form submission
+        document.getElementById("updateForm").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent form from refreshing the page
+
+            // Get form values
+            const id = new URLSearchParams(window.location.search).get("id"); // Get ID from query string
+            const firstname = document.getElementById("firstname").value;
+            const lastname = document.getElementById("lastname").value;
+            const faction = document.getElementById("faction").value;
+
+            try {
+                // Send PUT request to the server
+                const response = await fetch(`/updatecharecter/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ firstname, lastname, faction }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to update character.");
+                }
+
+                const updatedCharacter = await response.json();
+                alert(`Character updated successfully: ${updatedCharacter.firstname} ${updatedCharacter.lastname}`);
+                // Optionally, redirect to the list page or another page
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("Error updating character:", error);
+                alert("Failed to update character.");
+            }
+        });
+    </script>
+</body>
+</html>
