@@ -6,9 +6,20 @@
     <title>Add an Entry</title>
 </head>
 <body>
-    <h1>Add an Entry</h1>
-    Add a Star Wars Character:
-    <input type="text" id="entry" name="entry">
-    <button type="button">Add</button>
+    <h1>Add a Character</h1>
+    <a href="index.html">Back to List</a>
+    <br>
+    <form action="/addcharecter" method="POST">
+        <label for="firstname">First Name</label>
+        <input type="text" name="firstname" id="firstname">
+        <br>
+        <label for="lastname">Last Name</label>
+        <input type="text" name="lastname" id="lastname">
+        <br>
+        <label for="faction">Character Faction</label>
+        <input type="text" name="faction" id="faction">
+        <br>
+        <button type="submit">Add Character</button>
+    </form>
 </body>
 </html>
