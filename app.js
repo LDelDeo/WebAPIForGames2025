@@ -26,6 +26,10 @@ app.get("/testjson", (req,res)=>{
     res.sendFile(path.join(__dirname, "public", "json/games.json"));
 });
 
+app.get("/statuscode", (req,res)=>{
+    res.sendStatus(404);
+})
+
 setTimeout(()=>{
     console.log("Hello 2 seconds later");
 }, 2000);
