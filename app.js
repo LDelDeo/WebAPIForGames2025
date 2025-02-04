@@ -4,6 +4,11 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { Int32 } = require("bson");
 const path = require("path");
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
+const User = require("./models/User");
+const Person = require("./models/Person");
+const { register } = require("module");
 
 const app = express();
 const port = process.env.port||3000;
@@ -14,6 +19,18 @@ app.use(express.static(path.join(__dirname, "public")));
 //Set up middleware to parse json requests
 app.use(bodyParser.json());
 app.use(express.urlencoded({extended:true}));
+
+app.use(session({
+    secret:"12345",
+    resave:false,
+    saveUninitialized:true,
+    cookie:{secure:false} //Set to true if using https
+}))
+
+function isAuthenticated(req,res, next){
+    if (req.session.user)return next();
+    return res.redirect("/loginpage.html");
+}
 
 //MongoDB connection setup
 const mongoURI = "mongodb://localhost:27017/crudapp";
@@ -26,6 +43,9 @@ db.once("open", ()=>{
     console.log("Connected to MongoDB Database");
 });
 
+//App Routes
+const protected = ["/mainpage.html", "/addentry.html", "/updateentry.html"]
+
 //Setup Mongoose Schema
 const charecterSchema = new mongoose.Schema({
     firstname:String,
@@ -36,9 +56,51 @@ const charecterSchema = new mongoose.Schema({
 const Charecter = mongoose.model("Charecter", charecterSchema, "starwarsdata");
 
 //App Routes
+
+app.get("/register.html", (req,res)=>{
+    res.sendFile(path.join(__dirname,"public","register.html"));
+});
+
+app.post("/register.html", async (req,res)=>{
+    try{
+        const {username, password, email} = req.body;
+
+        const exsistingUser = await User.findOne({username});
+
+        if(exsistingUser){
+            return res.send("Username already taken. Try a different one.")
+        }
+
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        const newUser = new User({username, password:hashedPassword, email});
+        await newUser.save();
+
+        res.redirect("/loginpage.html");
+
+    }catch(err){
+        res.status(500).send("Error registering new user.")
+    }
+});
+
 app.get("/", (req,res)=>{
     res.sendFile("index.html");
 });
+
+app.get("/mainpage.html", isAuthenticated, (req,res)=>{
+    res.sendFile(path.join(__dirname, "private", "mainpage.html"));
+});
+
+app.get("/addentry.html", isAuthenticated, (req,res)=>{
+    res.sendFile(path.join(__dirname, "private", "addentry.html"));
+});
+
+app.get("/updateentry.html", isAuthenticated, (req,res)=>{
+    res.sendFile(path.join(__dirname, "private", "updateentry.html"));
+});
+
+app.get("/loginpage", (req,res)=>{
+    res.sendFile(path.join(__dirname + "/public/loginpage.html"));
+})
 
 
 app.get("/charecter", async(req,res)=>{
@@ -109,6 +171,26 @@ app.delete("/deletecharecter/:id", async (req, res) => {
         console.log(err);
         return res.status(500).json({ error: "An error occurred while deleting the character." });
     }
+});
+
+app.post("/loginpage.html", async (req,res)=>{
+    const {username, password} = req.body;
+    console.log(req.body);
+
+    const user = await User.findOne({username});
+
+    if (user && bcrypt.compareSync(password, user.password)){
+        req.session.user = username;
+        return res.redirect("/mainpage.html");
+    }
+    req.session.error = "Invalid User";
+    return res.redirect("/loginpage.html");
+});
+
+app.get("/logout", (req,res)=>{
+    req.session.destroy(()=>{
+        res.redirect("/loginpage.html");
+    });
 });
 
 
